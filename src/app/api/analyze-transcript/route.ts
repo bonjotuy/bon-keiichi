@@ -18,12 +18,16 @@ export async function POST(req: NextRequest) {
     messages: [
       {
         role: 'user',
-        content: `あなたはプロジェクト管理アシスタントです。以下はボンちゃん（Yuuto Yamanaka）と杉浦さん（Keiichi Sugiura）のミーティング文字起こしです。
+        content: `あなたはプロジェクト管理アシスタントです。以下はミーティングの文字起こしです。
+
+人物情報:
+- 山中雄斗（やまなか ゆうと）= ボンちゃん
+- 杉浦恵一（すぎうら けいいち）= 杉浦さん
 
 文字起こしからタスクやアイデアを抽出して、JSONのみ返してください。説明文は不要です。
 
 ルール:
-- assigneeは「ボンちゃん」か「杉浦さん」のどちらか
+- assigneeは「ボンちゃん」か「杉浦さん」のどちらか（上記の人物情報を参照）
 - priorityは「高」「中」「低」のどれか
 - typeは具体的なアクションなら「task」、将来のアイデアや提案なら「idea」
 - dueDateは期限が明示されていれば「YYYY-MM-DD」形式、なければnull
