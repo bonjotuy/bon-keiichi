@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { Task, ItemType } from '@/types/task'
+import { PROJECTS } from '@/lib/projects'
 
 interface ExtractedTask {
   title: string
@@ -159,7 +160,13 @@ export default function ImportPage() {
                   </div>
                   {task.description && <p className="text-xs text-gray-500">{task.description}</p>}
                   <div className="flex gap-2 flex-wrap items-center">
-                    <span className="text-xs bg-orange-100 text-orange-700 px-2 py-0.5 rounded-full">{task.project}</span>
+                    <select
+                      value={task.project}
+                      onChange={e => updateTask(i, { project: e.target.value })}
+                      className="text-xs border border-gray-200 rounded-lg px-2 py-1 bg-white focus:outline-none focus:border-orange-400"
+                    >
+                      {PROJECTS.map(p => <option key={p} value={p}>{p}</option>)}
+                    </select>
                     <span className={`text-xs px-2 py-0.5 rounded-full ${priorityColors[task.priority]}`}>優先度: {task.priority}</span>
                     <span className="text-xs text-gray-500">{task.assignee}</span>
                   </div>

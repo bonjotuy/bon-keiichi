@@ -1,6 +1,7 @@
 'use client'
 import { useState } from 'react'
 import { Task, Assignee, Priority, ItemType } from '@/types/task'
+import { PROJECTS } from '@/lib/projects'
 
 interface Props {
   onAdd: (task: Omit<Task, 'id' | 'createdAt'>) => void
@@ -14,7 +15,7 @@ export default function TaskForm({ onAdd, projects: existingProjects, defaultTyp
   const [title, setTitle] = useState('')
   const [description, setDescription] = useState('')
   const [assignee, setAssignee] = useState<Assignee>('ボンちゃん')
-  const [project, setProject] = useState('')
+  const [project, setProject] = useState<string>(PROJECTS[0])
   const [priority, setPriority] = useState<Priority>('中')
   const [dueDate, setDueDate] = useState('')
   const [error, setError] = useState('')
@@ -24,7 +25,7 @@ export default function TaskForm({ onAdd, projects: existingProjects, defaultTyp
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!title.trim()) { setError('タイトルは必須です'); return }
-    if (!isIdea && !project.trim()) { setError('プロジェクト名は必須です'); return }
+    if (!isIdea && !project) { setError('プロジェクト名は必須です'); return }
     setError('')
     onAdd({
       type,
@@ -36,7 +37,7 @@ export default function TaskForm({ onAdd, projects: existingProjects, defaultTyp
       status: '未着手',
       dueDate: dueDate || undefined,
     })
-    setTitle(''); setDescription(''); setProject(''); setDueDate(''); setOpen(false)
+    setTitle(''); setDescription(''); setProject(PROJECTS[0] as string); setDueDate(''); setOpen(false)
   }
 
   if (!open) return (
@@ -82,9 +83,10 @@ export default function TaskForm({ onAdd, projects: existingProjects, defaultTyp
               <option value="中">🟡 中</option>
               <option value="低">🟢 低</option>
             </select>
-            <input value={project} onChange={e => setProject(e.target.value)} placeholder="プロジェクト名 *"
-              list="projects" className="border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-orange-400 flex-1 min-w-32" />
-            <datalist id="projects">{existingProjects.map(p => <option key={p} value={p} />)}</datalist>
+            <select value={project} onChange={e => setProject(e.target.value)}
+              className="border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-orange-400 bg-white flex-1">
+              {PROJECTS.map(p => <option key={p} value={p}>{p}</option>)}
+            </select>
             <div className="flex items-center gap-2">
               <label className="text-xs text-gray-400 whitespace-nowrap">期限</label>
               <input
