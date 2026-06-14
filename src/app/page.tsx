@@ -12,7 +12,7 @@ export default function Home() {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    fetch('/api/tasks').then(r => r.json()).then(data => { setTasks(data); setLoading(false) })
+    fetch('/api/tasks').then(r => r.json()).then(data => { setTasks(data.tasks || []); setLoading(false) })
   }, [])
 
   const projects = [...new Set(tasks.map(t => t.project))]
