@@ -14,34 +14,28 @@ export default function RootLayout({
   return (
     <html lang="ja">
       <body className="bg-warm-50 min-h-screen">
-        <header className="bg-gradient-to-r from-orange-400 to-amber-500 text-white shadow-md">
-          <div className="max-w-4xl mx-auto px-4 py-4 flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <span className="text-3xl">🎸🎯</span>
-              <div>
-                <h1 className="text-xl font-bold tracking-wide">ボン恵一PM</h1>
-                <p className="text-orange-100 text-sm">ふたりの共同タスク管理</p>
-              </div>
-            </div>
-            <nav className="flex gap-4">
-              <a href="/" className="text-white hover:text-orange-200 font-medium text-sm transition-colors">
-                📋 タスク一覧
+        <header className="bg-white border-b border-gray-100 sticky top-0 z-10">
+          <div className="max-w-2xl mx-auto px-4 py-3 flex items-center justify-between">
+            <a href="/" className="flex items-center gap-2">
+              <span className="text-xl">🎸🎯</span>
+              <span className="font-bold text-gray-800 tracking-tight">ボン恵一PM</span>
+            </a>
+            <nav className="flex gap-1">
+              <a href="/" className="px-3 py-1.5 rounded-lg text-sm text-gray-500 hover:bg-gray-100 hover:text-gray-800 transition-colors font-medium">
+                タスク
               </a>
-              <a href="/meeting" className="text-white hover:text-orange-200 font-medium text-sm transition-colors">
-                📅 月曜ミーティング
+              <a href="/meeting" className="px-3 py-1.5 rounded-lg text-sm text-gray-500 hover:bg-gray-100 hover:text-gray-800 transition-colors font-medium">
+                月曜MTG
               </a>
-              <a href="/import" className="text-white hover:text-orange-200 font-medium text-sm transition-colors">
-                🎙️ 文字起こし取り込み
+              <a href="/import" className="px-3 py-1.5 rounded-lg text-sm text-gray-500 hover:bg-gray-100 hover:text-gray-800 transition-colors font-medium">
+                取り込み
               </a>
             </nav>
           </div>
         </header>
-        <main className="max-w-4xl mx-auto px-4 py-6">
+        <main className="max-w-2xl mx-auto px-4 py-6">
           {children}
         </main>
-        <footer className="text-center text-gray-400 text-xs py-4 mt-8">
-          🎸 ボンちゃん & 杉浦さん 🎯
-        </footer>
       </body>
     </html>
   )

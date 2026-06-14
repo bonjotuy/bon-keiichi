@@ -11,7 +11,7 @@ export default function MeetingPage() {
   monday.setDate(today.getDate() - today.getDay() + 1)
 
   useEffect(() => {
-    fetch('/api/tasks').then(r => r.json()).then(setTasks)
+    fetch('/api/tasks').then(r => r.json()).then(data => setTasks(data.tasks || []))
   }, [])
 
   const urgent = tasks.filter(t => t.status !== '完了' && t.priority === '高').sort((a, b) => priorityOrder[a.priority] - priorityOrder[b.priority])

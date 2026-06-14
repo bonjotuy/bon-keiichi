@@ -1,13 +1,13 @@
 'use client'
 import { useEffect, useState } from 'react'
-import { Task } from '@/types/task'
+import { Task, ItemType } from '@/types/task'
 import TaskCard from '@/components/TaskCard'
 import TaskForm from '@/components/TaskForm'
 
 export default function Home() {
   const [tasks, setTasks] = useState<Task[]>([])
+  const [activeTab, setActiveTab] = useState<ItemType>('task')
   const [filterAssignee, setFilterAssignee] = useState<string>('全員')
-  const [filterProject, setFilterProject] = useState<string>('全て')
   const [filterStatus, setFilterStatus] = useState<string>('未完了')
   const [loading, setLoading] = useState(true)
 
@@ -15,23 +15,32 @@ export default function Home() {
     fetch('/api/tasks').then(r => r.json()).then(data => { setTasks(data.tasks || []); setLoading(false) })
   }, [])
 
-  const projects = [...new Set(tasks.map(t => t.project))]
+  const projects = [...new Set(tasks.filter(t => t.type === 'task').map(t => t.project))]
 
   const filtered = tasks.filter(t => {
+    if (t.type !== activeTab) return false
+    if (activeTab === 'idea') return true
     if (filterAssignee !== '全員' && t.assignee !== filterAssignee) return false
-    if (filterProject !== '全て' && t.project !== filterProject) return false
     if (filterStatus === '未完了' && t.status === '完了') return false
     if (filterStatus === '完了のみ' && t.status !== '完了') return false
     return true
   })
 
-  const bonCount = tasks.filter(t => t.assignee === 'ボンちゃん' && t.status !== '完了').length
-  const sugCount = tasks.filter(t => t.assignee === '両方' || t.assignee === '杉浦さん').filter(t => t.status !== '完了').length
+  const grouped = filtered.reduce<Record<string, Task[]>>((acc, t) => {
+    const key = t.project || 'その他'
+    if (!acc[key]) acc[key] = []
+    acc[key].push(t)
+    return acc
+  }, {})
+
+  const bonCount = tasks.filter(t => t.type === 'task' && t.assignee === 'ボンちゃん' && t.status !== '完了').length
+  const sugCount = tasks.filter(t => t.type === 'task' && (t.assignee === '杉浦さん' || t.assignee === '両方') && t.status !== '完了').length
+  const ideaCount = tasks.filter(t => t.type === 'idea').length
 
   const handleAdd = async (task: Omit<Task, 'id' | 'createdAt'>) => {
     const res = await fetch('/api/tasks', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(task) })
     const newTask = await res.json()
-    setTasks(prev => [...prev, newTask])
+    setTasks(prev => [newTask, ...prev])
   }
 
   const handleStatusChange = async (id: string, status: Task['status']) => {
@@ -45,56 +54,91 @@ export default function Home() {
   }
 
   return (
-    <div>
-      <div className="flex gap-4 mb-6">
-        <div className="flex-1 bg-white rounded-xl p-4 shadow-sm border text-center">
-          <div className="text-2xl">🎸</div>
-          <div className="font-bold text-gray-700">ボンちゃん</div>
-          <div className="text-3xl font-bold text-orange-500">{bonCount}</div>
-          <div className="text-xs text-gray-400">残タスク</div>
+    <div className="space-y-5">
+      {/* Stats */}
+      <div className="grid grid-cols-3 gap-3">
+        <div className="bg-white rounded-2xl p-4 shadow-sm border border-gray-100 text-center">
+          <div className="text-xl mb-1">🎸</div>
+          <div className="text-2xl font-bold text-orange-500">{bonCount}</div>
+          <div className="text-xs text-gray-400 mt-0.5">ボンちゃん</div>
         </div>
-        <div className="flex-1 bg-white rounded-xl p-4 shadow-sm border text-center">
-          <div className="text-2xl">🎯</div>
-          <div className="font-bold text-gray-700">杉浦さん</div>
-          <div className="text-3xl font-bold text-blue-500">{sugCount}</div>
-          <div className="text-xs text-gray-400">残タスク</div>
+        <div className="bg-white rounded-2xl p-4 shadow-sm border border-gray-100 text-center">
+          <div className="text-xl mb-1">🎯</div>
+          <div className="text-2xl font-bold text-blue-500">{sugCount}</div>
+          <div className="text-xs text-gray-400 mt-0.5">杉浦さん</div>
+        </div>
+        <div className="bg-white rounded-2xl p-4 shadow-sm border border-gray-100 text-center">
+          <div className="text-xl mb-1">💡</div>
+          <div className="text-2xl font-bold text-purple-500">{ideaCount}</div>
+          <div className="text-xs text-gray-400 mt-0.5">アイデア</div>
         </div>
       </div>
 
-      <div className="flex gap-2 mb-4 flex-wrap">
-        {['全員', 'ボンちゃん', '杉浦さん', '両方'].map(a => (
-          <button key={a} onClick={() => setFilterAssignee(a)} className={`px-3 py-1.5 rounded-full text-sm font-medium transition-all ${filterAssignee === a ? 'bg-orange-500 text-white' : 'bg-white text-gray-500 hover:bg-orange-50'}`}>{a}</button>
-        ))}
-        <span className="border-l border-gray-200 mx-1" />
-        {['未完了', '完了のみ', '全て'].map(s => (
-          <button key={s} onClick={() => setFilterStatus(s)} className={`px-3 py-1.5 rounded-full text-sm font-medium transition-all ${filterStatus === s ? 'bg-gray-700 text-white' : 'bg-white text-gray-500 hover:bg-gray-50'}`}>{s}</button>
-        ))}
-        {projects.length > 0 && <>
-          <span className="border-l border-gray-200 mx-1" />
-          <select value={filterProject} onChange={e => setFilterProject(e.target.value)} className="px-3 py-1.5 rounded-full text-sm bg-white border text-gray-500">
-            <option>全て</option>
-            {projects.map(p => <option key={p}>{p}</option>)}
-          </select>
-        </>}
+      {/* Tab */}
+      <div className="flex bg-gray-100 rounded-xl p-1 gap-1">
+        <button
+          onClick={() => setActiveTab('task')}
+          className={`flex-1 py-2 rounded-lg text-sm font-semibold transition-all ${activeTab === 'task' ? 'bg-white text-gray-800 shadow-sm' : 'text-gray-500'}`}
+        >
+          ✅ タスク
+        </button>
+        <button
+          onClick={() => setActiveTab('idea')}
+          className={`flex-1 py-2 rounded-lg text-sm font-semibold transition-all ${activeTab === 'idea' ? 'bg-white text-gray-800 shadow-sm' : 'text-gray-500'}`}
+        >
+          💡 アイデア
+        </button>
       </div>
 
-      {loading ? (
-        <div className="text-center text-gray-400 py-10">読み込み中...</div>
-      ) : (
-        <div className="space-y-3">
-          {filtered.sort((a, b) => {
-            const pOrder = { '高': 0, '中': 1, '低': 2 }
-            return pOrder[a.priority] - pOrder[b.priority]
-          }).map(task => (
-            <TaskCard key={task.id} task={task} onStatusChange={handleStatusChange} onDelete={handleDelete} />
+      {/* Filters (task only) */}
+      {activeTab === 'task' && (
+        <div className="flex gap-2 flex-wrap">
+          {['全員', 'ボンちゃん', '杉浦さん', '両方'].map(a => (
+            <button key={a} onClick={() => setFilterAssignee(a)}
+              className={`px-3 py-1 rounded-full text-xs font-medium transition-all ${filterAssignee === a ? 'bg-orange-500 text-white' : 'bg-white text-gray-500 border border-gray-200 hover:border-orange-300'}`}>
+              {a}
+            </button>
           ))}
-          {filtered.length === 0 && <div className="text-center text-gray-400 py-10">タスクがありません 🎉</div>}
+          <span className="border-l border-gray-200 mx-1" />
+          {['未完了', '完了のみ', '全て'].map(s => (
+            <button key={s} onClick={() => setFilterStatus(s)}
+              className={`px-3 py-1 rounded-full text-xs font-medium transition-all ${filterStatus === s ? 'bg-gray-700 text-white' : 'bg-white text-gray-500 border border-gray-200 hover:border-gray-400'}`}>
+              {s}
+            </button>
+          ))}
         </div>
       )}
 
-      <div className="mt-4">
-        <TaskForm onAdd={handleAdd} projects={projects} />
-      </div>
+      {/* Content */}
+      {loading ? (
+        <div className="text-center text-gray-400 py-16 text-sm">読み込み中...</div>
+      ) : (
+        <div className="space-y-6">
+          {Object.keys(grouped).length === 0 && (
+            <div className="text-center text-gray-400 py-16 text-sm">
+              {activeTab === 'task' ? 'タスクなし 🎉' : 'アイデアなし 💡'}
+            </div>
+          )}
+          {Object.entries(grouped).map(([project, items]) => (
+            <div key={project}>
+              <div className="flex items-center gap-2 mb-2">
+                <span className="text-xs font-bold text-gray-400 uppercase tracking-wider">{project}</span>
+                <div className="flex-1 h-px bg-gray-100" />
+                <span className="text-xs text-gray-300">{items.length}</span>
+              </div>
+              <div className="space-y-2">
+                {items
+                  .sort((a, b) => ({ '高': 0, '中': 1, '低': 2 }[a.priority] ?? 1) - ({ '高': 0, '中': 1, '低': 2 }[b.priority] ?? 1))
+                  .map(task => (
+                    <TaskCard key={task.id} task={task} onStatusChange={handleStatusChange} onDelete={handleDelete} />
+                  ))}
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      <TaskForm onAdd={handleAdd} projects={projects} defaultType={activeTab} />
     </div>
   )
 }
