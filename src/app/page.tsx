@@ -9,6 +9,7 @@ export default function Home() {
   const [activeTab, setActiveTab] = useState<ItemType>('task')
   const [filterAssignee, setFilterAssignee] = useState<string>('全員')
   const [filterStatus, setFilterStatus] = useState<string>('未完了')
+  const [sortBy, setSortBy] = useState<'追加順' | '期限順'>('追加順')
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
@@ -93,7 +94,7 @@ export default function Home() {
       {/* Filters (task only) */}
       {activeTab === 'task' && (
         <div className="flex gap-2 flex-wrap">
-          {['全員', 'ボンちゃん', '杉浦さん', '両方'].map(a => (
+          {['全員', 'ボンちゃん', '杉浦さん'].map(a => (
             <button key={a} onClick={() => setFilterAssignee(a)}
               className={`px-3 py-1 rounded-full text-xs font-medium transition-all ${filterAssignee === a ? 'bg-orange-500 text-white' : 'bg-white text-gray-500 border border-gray-200 hover:border-orange-300'}`}>
               {a}
@@ -103,6 +104,13 @@ export default function Home() {
           {['未完了', '完了のみ', '全て'].map(s => (
             <button key={s} onClick={() => setFilterStatus(s)}
               className={`px-3 py-1 rounded-full text-xs font-medium transition-all ${filterStatus === s ? 'bg-gray-700 text-white' : 'bg-white text-gray-500 border border-gray-200 hover:border-gray-400'}`}>
+              {s}
+            </button>
+          ))}
+          <span className="border-l border-gray-200 mx-1" />
+          {(['追加順', '期限順'] as const).map(s => (
+            <button key={s} onClick={() => setSortBy(s)}
+              className={`px-3 py-1 rounded-full text-xs font-medium transition-all ${sortBy === s ? 'bg-blue-500 text-white' : 'bg-white text-gray-500 border border-gray-200 hover:border-blue-300'}`}>
               {s}
             </button>
           ))}
@@ -128,7 +136,15 @@ export default function Home() {
               </div>
               <div className="space-y-2">
                 {items
-                  .sort((a, b) => ({ '高': 0, '中': 1, '低': 2 }[a.priority] ?? 1) - ({ '高': 0, '中': 1, '低': 2 }[b.priority] ?? 1))
+                  .sort((a, b) => {
+                    if (sortBy === '期限順') {
+                      if (!a.dueDate && !b.dueDate) return 0
+                      if (!a.dueDate) return 1
+                      if (!b.dueDate) return -1
+                      return a.dueDate.localeCompare(b.dueDate)
+                    }
+                    return ({ '高': 0, '中': 1, '低': 2 }[a.priority] ?? 1) - ({ '高': 0, '中': 1, '低': 2 }[b.priority] ?? 1)
+                  })
                   .map(task => (
                     <TaskCard key={task.id} task={task} onStatusChange={handleStatusChange} onDelete={handleDelete} />
                   ))}
