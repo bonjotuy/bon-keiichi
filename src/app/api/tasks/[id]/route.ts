@@ -1,62 +1,53 @@
 import { NextRequest, NextResponse } from 'next/server'
-import fs from 'fs'
-import path from 'path'
-import { Task, TasksData } from '@/types/task'
-
-const dataFilePath = path.join(process.cwd(), 'data', 'tasks.json')
-
-function readTasks(): TasksData {
-  const fileContents = fs.readFileSync(dataFilePath, 'utf-8')
-  return JSON.parse(fileContents) as TasksData
-}
-
-function writeTasks(data: TasksData): void {
-  fs.writeFileSync(dataFilePath, JSON.stringify(data, null, 2), 'utf-8')
-}
+import { getSupabase } from '@/lib/supabase'
 
 export async function PATCH(
-  request: NextRequest,
+  req: NextRequest,
   { params }: { params: { id: string } }
 ) {
-  try {
-    const body = await request.json() as Partial<Task>
-    const data = readTasks()
+  const supabase = getSupabase()
+  const body = await req.json()
 
-    const taskIndex = data.tasks.findIndex((t) => t.id === params.id)
-    if (taskIndex === -1) {
-      return NextResponse.json({ error: 'タスクが見つかりません' }, { status: 404 })
-    }
+  const { data, error } = await supabase
+    .from('tasks')
+    .update({
+      ...(body.title !== undefined && { title: body.title }),
+      ...(body.description !== undefined && { description: body.description }),
+      ...(body.assignee !== undefined && { assignee: body.assignee }),
+      ...(body.project !== undefined && { project: body.project }),
+      ...(body.priority !== undefined && { priority: body.priority }),
+      ...(body.status !== undefined && { status: body.status }),
+      updated_at: new Date().toISOString(),
+    })
+    .eq('id', params.id)
+    .select()
+    .single()
 
-    data.tasks[taskIndex] = {
-      ...data.tasks[taskIndex],
-      ...body,
-      updatedAt: new Date().toISOString(),
-    }
+  if (error) return NextResponse.json({ error: error.message }, { status: 500 })
 
-    writeTasks(data)
-    return NextResponse.json(data.tasks[taskIndex])
-  } catch {
-    return NextResponse.json({ error: 'タスクの更新に失敗しました' }, { status: 500 })
-  }
+  return NextResponse.json({
+    id: data.id,
+    title: data.title,
+    description: data.description,
+    assignee: data.assignee,
+    project: data.project,
+    priority: data.priority,
+    status: data.status,
+    createdAt: data.created_at,
+    updatedAt: data.updated_at,
+  })
 }
 
 export async function DELETE(
-  _request: NextRequest,
+  _req: NextRequest,
   { params }: { params: { id: string } }
 ) {
-  try {
-    const data = readTasks()
+  const supabase = getSupabase()
+  const { error } = await supabase
+    .from('tasks')
+    .delete()
+    .eq('id', params.id)
 
-    const taskIndex = data.tasks.findIndex((t) => t.id === params.id)
-    if (taskIndex === -1) {
-      return NextResponse.json({ error: 'タスクが見つかりません' }, { status: 404 })
-    }
-
-    data.tasks.splice(taskIndex, 1)
-    writeTasks(data)
-
-    return NextResponse.json({ success: true })
-  } catch {
-    return NextResponse.json({ error: 'タスクの削除に失敗しました' }, { status: 500 })
-  }
+  if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+  return NextResponse.json({ success: true })
 }

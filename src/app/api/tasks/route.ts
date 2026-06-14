@@ -1,45 +1,58 @@
 import { NextRequest, NextResponse } from 'next/server'
-import fs from 'fs'
-import path from 'path'
-import { Task, TasksData } from '@/types/task'
-
-const dataFilePath = path.join(process.cwd(), 'data', 'tasks.json')
-
-function readTasks(): TasksData {
-  const fileContents = fs.readFileSync(dataFilePath, 'utf-8')
-  return JSON.parse(fileContents) as TasksData
-}
-
-function writeTasks(data: TasksData): void {
-  fs.writeFileSync(dataFilePath, JSON.stringify(data, null, 2), 'utf-8')
-}
+import { getSupabase } from '@/lib/supabase'
 
 export async function GET() {
-  try {
-    const data = readTasks()
-    return NextResponse.json(data)
-  } catch {
-    return NextResponse.json({ error: 'タスクの読み込みに失敗しました' }, { status: 500 })
-  }
+  const supabase = getSupabase()
+  const { data, error } = await supabase
+    .from('tasks')
+    .select('*')
+    .order('created_at', { ascending: false })
+
+  if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+
+  const tasks = (data || []).map(row => ({
+    id: row.id,
+    title: row.title,
+    description: row.description,
+    assignee: row.assignee,
+    project: row.project,
+    priority: row.priority,
+    status: row.status,
+    createdAt: row.created_at,
+    updatedAt: row.updated_at,
+  }))
+
+  return NextResponse.json({ tasks })
 }
 
-export async function POST(request: NextRequest) {
-  try {
-    const body = await request.json() as Omit<Task, 'id' | 'createdAt' | 'updatedAt'>
-    const data = readTasks()
+export async function POST(req: NextRequest) {
+  const supabase = getSupabase()
+  const body = await req.json()
 
-    const newTask: Task = {
-      ...body,
-      id: Date.now().toString(),
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    }
+  const { data, error } = await supabase
+    .from('tasks')
+    .insert({
+      title: body.title,
+      description: body.description || '',
+      assignee: body.assignee,
+      project: body.project,
+      priority: body.priority,
+      status: body.status || '未着手',
+    })
+    .select()
+    .single()
 
-    data.tasks.push(newTask)
-    writeTasks(data)
+  if (error) return NextResponse.json({ error: error.message }, { status: 500 })
 
-    return NextResponse.json(newTask, { status: 201 })
-  } catch {
-    return NextResponse.json({ error: 'タスクの作成に失敗しました' }, { status: 500 })
-  }
+  return NextResponse.json({
+    id: data.id,
+    title: data.title,
+    description: data.description,
+    assignee: data.assignee,
+    project: data.project,
+    priority: data.priority,
+    status: data.status,
+    createdAt: data.created_at,
+    updatedAt: data.updated_at,
+  }, { status: 201 })
 }
