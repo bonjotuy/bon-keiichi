@@ -30,6 +30,9 @@ export default function RootLayout({
               <a href="/meeting" className="text-white hover:text-orange-200 font-medium text-sm transition-colors">
                 📅 月曜ミーティング
               </a>
+              <a href="/import" className="text-white hover:text-orange-200 font-medium text-sm transition-colors">
+                🎙️ 文字起こし取り込み
+              </a>
             </nav>
           </div>
         </header>
