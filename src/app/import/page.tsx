@@ -19,6 +19,7 @@ export default function ImportPage() {
   const [extracted, setExtracted] = useState<ExtractedTask[]>([])
   const [selected, setSelected] = useState<Set<number>>(new Set())
   const [loading, setLoading] = useState(false)
+  const [loadingProgress, setLoadingProgress] = useState('')
   const [fileLoading, setFileLoading] = useState(false)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
@@ -45,26 +46,64 @@ export default function ImportPage() {
     }
   }
 
+  const splitIntoChunks = (text: string, maxChars = 3000): string[] => {
+    if (text.length <= maxChars) return [text]
+    const chunks: string[] = []
+    let remaining = text
+    while (remaining.length > 0) {
+      if (remaining.length <= maxChars) {
+        chunks.push(remaining)
+        break
+      }
+      // try to split at a newline boundary
+      let splitAt = remaining.lastIndexOf('\n', maxChars)
+      if (splitAt < maxChars * 0.5) splitAt = maxChars
+      chunks.push(remaining.slice(0, splitAt))
+      remaining = remaining.slice(splitAt).trimStart()
+    }
+    return chunks
+  }
+
   const analyze = async () => {
     if (!transcript.trim()) return
     setLoading(true)
+    setLoadingProgress('')
     setError('')
     setExtracted([])
     setSelected(new Set())
     try {
-      const res = await fetch('/api/analyze-transcript', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ transcript }),
+      const chunks = splitIntoChunks(transcript.trim())
+      const allTasks: ExtractedTask[] = []
+
+      for (let i = 0; i < chunks.length; i++) {
+        if (chunks.length > 1) {
+          setLoadingProgress(`分割処理中 (${i + 1}/${chunks.length})...`)
+        }
+        const res = await fetch('/api/analyze-transcript', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ transcript: chunks[i] }),
+        })
+        const data = await res.json()
+        if (!res.ok) throw new Error(data.error || 'エラーが発生しました')
+        allTasks.push(...(data.tasks || []))
+      }
+
+      // deduplicate by title
+      const seen = new Set<string>()
+      const deduped = allTasks.filter(t => {
+        if (seen.has(t.title)) return false
+        seen.add(t.title)
+        return true
       })
-      const data = await res.json()
-      if (!res.ok) throw new Error(data.error || 'エラーが発生しました')
-      setExtracted(data.tasks || [])
-      setSelected(new Set((data.tasks || []).map((_: unknown, i: number) => i)))
+
+      setExtracted(deduped)
+      setSelected(new Set(deduped.map((_, i) => i)))
     } catch (e) {
       setError(e instanceof Error ? e.message : 'エラーが発生しました')
     } finally {
       setLoading(false)
+      setLoadingProgress('')
     }
   }
 
@@ -162,7 +201,7 @@ export default function ImportPage() {
             disabled={loading || !transcript.trim()}
             className="w-full py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 font-medium text-sm disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            {loading ? 'AIが分析中...' : 'タスクを自動抽出する'}
+            {loading ? (loadingProgress || 'AIが分析中...') : 'タスクを自動抽出する'}
           </button>
         </div>
       ) : (
