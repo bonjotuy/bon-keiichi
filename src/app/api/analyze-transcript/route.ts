@@ -20,28 +20,16 @@ export async function POST(req: NextRequest) {
         role: 'user',
         content: `あなたはプロジェクト管理アシスタントです。以下はボンちゃん（Yuuto Yamanaka）と杉浦さん（Keiichi Sugiura）のミーティング文字起こしです。
 
-文字起こしからタスクやアイデアを抽出して、以下のJSON形式で返してください。担当者は「ボンちゃん」「杉浦さん」のいずれかを選んでください。
+文字起こしからタスクやアイデアを抽出して、JSONのみ返してください。説明文は不要です。
 
-\`\`\`json
-{
-  "tasks": [
-    {
-      "title": "タスク名",
-      "description": "詳細説明（任意）",
-      "assignee": "ボンちゃん" | "杉浦さん",
-      "project": "プロジェクト名",
-      "priority": "高" | "中" | "低",
-      "type": "task" | "idea",
-      "dueDate": "2026-06-20" | null
-    }
-  ]
-}
-\`\`\`
+ルール:
+- assigneeは「ボンちゃん」か「杉浦さん」のどちらか
+- priorityは「高」「中」「低」のどれか
+- typeは具体的なアクションなら「task」、将来のアイデアや提案なら「idea」
+- dueDateは期限が明示されていれば「YYYY-MM-DD」形式、なければnull
 
-- typeは具体的なアクションアイテムなら"task"、将来のアイデアや提案なら"idea"にしてください
-- dueDateは会話中に期限や日付が明示されていれば"YYYY-MM-DD"形式で、なければnullにしてください
-
-JSONのみ返してください。説明文は不要です。
+出力形式:
+{"tasks":[{"title":"...","description":"...","assignee":"ボンちゃん","project":"...","priority":"中","type":"task","dueDate":null}]}
 
 ---
 ${transcript}`,
@@ -50,15 +38,28 @@ ${transcript}`,
   })
 
   const text = message.content[0].type === 'text' ? message.content[0].text : ''
-  const jsonMatch = text.match(/```json\n?([\s\S]*?)\n?```/) || text.match(/(\{[\s\S]*\})/)
-  if (!jsonMatch) {
-    return NextResponse.json({ error: 'Failed to parse AI response', raw: text }, { status: 500 })
+
+  // Try to extract JSON from various formats
+  const patterns = [
+    /```json\s*([\s\S]*?)\s*```/,
+    /```\s*([\s\S]*?)\s*```/,
+    /(\{[\s\S]*\})/,
+  ]
+
+  let jsonStr: string | null = null
+  for (const pattern of patterns) {
+    const match = text.match(pattern)
+    if (match) { jsonStr = match[1]; break }
+  }
+
+  if (!jsonStr) {
+    return NextResponse.json({ error: 'AIからの応答を解析できませんでした', raw: text }, { status: 500 })
   }
 
   try {
-    const parsed = JSON.parse(jsonMatch[1])
+    const parsed = JSON.parse(jsonStr)
     return NextResponse.json(parsed)
   } catch {
-    return NextResponse.json({ error: 'Invalid JSON from AI', raw: text }, { status: 500 })
+    return NextResponse.json({ error: 'AIからの応答を解析できませんでした', raw: text }, { status: 500 })
   }
 }
