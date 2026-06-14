@@ -34,7 +34,7 @@ export default function Home() {
   }, {})
 
   const bonCount = tasks.filter(t => t.type === 'task' && t.assignee === 'ボンちゃん' && t.status !== '完了').length
-  const sugCount = tasks.filter(t => t.type === 'task' && (t.assignee === '杉浦さん' || t.assignee === '両方') && t.status !== '完了').length
+  const sugCount = tasks.filter(t => t.type === 'task' && t.assignee === '杉浦さん' && t.status !== '完了').length
   const ideaCount = tasks.filter(t => t.type === 'idea').length
 
   const handleAdd = async (task: Omit<Task, 'id' | 'createdAt'>) => {

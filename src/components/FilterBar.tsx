@@ -10,7 +10,7 @@ interface FilterBarProps {
   onProjectChange: (project: string) => void
 }
 
-const assignees: (Assignee | '全員')[] = ['全員', 'ボンちゃん', '杉浦さん', '両方']
+const assignees: (Assignee | '全員')[] = ['全員', 'ボンちゃん', '杉浦さん']
 
 export default function FilterBar({
   selectedAssignee,
@@ -34,7 +34,7 @@ export default function FilterBar({
                   : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
               }`}
             >
-              {assignee === '全員' ? '👥 全員' : assignee === 'ボンちゃん' ? '🎸 ボンちゃん' : assignee === '杉浦さん' ? '🎯 杉浦さん' : '🎸🎯 両方'}
+              {assignee}
             </button>
           ))}
         </div>

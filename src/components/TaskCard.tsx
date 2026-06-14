@@ -14,12 +14,6 @@ const priorityDot: Record<string, string> = {
   '低': 'bg-green-400',
 }
 
-const assigneeEmoji: Record<string, string> = {
-  'ボンちゃん': '🎸',
-  '杉浦さん': '🎯',
-  '両方': '🎸🎯',
-}
-
 const statusConfig: Record<string, { label: string; color: string }> = {
   '未着手': { label: '未着手', color: 'bg-gray-100 text-gray-500' },
   '進行中': { label: '進行中', color: 'bg-blue-50 text-blue-600' },
@@ -27,6 +21,17 @@ const statusConfig: Record<string, { label: string; color: string }> = {
 }
 
 const statusOrder: Status[] = ['未着手', '進行中', '完了']
+
+function getDueDateColor(dueDate: string): string {
+  const today = new Date()
+  today.setHours(0, 0, 0, 0)
+  const due = new Date(dueDate)
+  const diffMs = due.getTime() - today.getTime()
+  const diffDays = Math.ceil(diffMs / (1000 * 60 * 60 * 24))
+  if (diffDays < 0) return 'text-red-500'
+  if (diffDays <= 3) return 'text-orange-500'
+  return 'text-gray-400'
+}
 
 export default function TaskCard({ task, onStatusChange, onDelete }: TaskCardProps) {
   const isDone = task.status === '完了'
@@ -71,10 +76,15 @@ export default function TaskCard({ task, onStatusChange, onDelete }: TaskCardPro
                 <p className="text-xs text-gray-400 ml-4 mb-1">{task.description}</p>
               )}
               <div className="flex items-center gap-2 ml-4 flex-wrap">
-                <span className="text-xs text-gray-400">{assigneeEmoji[task.assignee]} {task.assignee}</span>
+                <span className="text-xs text-gray-400">{task.assignee}</span>
                 {!isIdea && (
                   <span className={`text-xs px-2 py-0.5 rounded-full ${statusConfig[task.status].color}`}>
                     {statusConfig[task.status].label}
+                  </span>
+                )}
+                {task.dueDate && (
+                  <span className={`text-xs font-medium ${getDueDateColor(task.dueDate)}`}>
+                    期限: {task.dueDate}
                   </span>
                 )}
               </div>

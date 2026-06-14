@@ -16,6 +16,7 @@ export default function TaskForm({ onAdd, projects: existingProjects, defaultTyp
   const [assignee, setAssignee] = useState<Assignee>('ボンちゃん')
   const [project, setProject] = useState('')
   const [priority, setPriority] = useState<Priority>('中')
+  const [dueDate, setDueDate] = useState('')
   const [error, setError] = useState('')
 
   const isIdea = type === 'idea'
@@ -33,8 +34,9 @@ export default function TaskForm({ onAdd, projects: existingProjects, defaultTyp
       project: isIdea ? 'アイデア' : project.trim(),
       priority,
       status: '未着手',
+      dueDate: dueDate || undefined,
     })
-    setTitle(''); setDescription(''); setProject(''); setOpen(false)
+    setTitle(''); setDescription(''); setProject(''); setDueDate(''); setOpen(false)
   }
 
   if (!open) return (
@@ -69,9 +71,8 @@ export default function TaskForm({ onAdd, projects: existingProjects, defaultTyp
       <div className="flex gap-2 flex-wrap">
         <select value={assignee} onChange={e => setAssignee(e.target.value as Assignee)}
           className="border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-orange-400 bg-white">
-          <option value="ボンちゃん">🎸 ボンちゃん</option>
-          <option value="杉浦さん">🎯 杉浦さん</option>
-          <option value="両方">🎸🎯 両方</option>
+          <option value="ボンちゃん">ボンちゃん</option>
+          <option value="杉浦さん">杉浦さん</option>
         </select>
         {!isIdea && (
           <>
@@ -84,6 +85,15 @@ export default function TaskForm({ onAdd, projects: existingProjects, defaultTyp
             <input value={project} onChange={e => setProject(e.target.value)} placeholder="プロジェクト名 *"
               list="projects" className="border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-orange-400 flex-1 min-w-32" />
             <datalist id="projects">{existingProjects.map(p => <option key={p} value={p} />)}</datalist>
+            <div className="flex items-center gap-2">
+              <label className="text-xs text-gray-400 whitespace-nowrap">期限</label>
+              <input
+                type="date"
+                value={dueDate}
+                onChange={e => setDueDate(e.target.value)}
+                className="border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-orange-400"
+              />
+            </div>
           </>
         )}
       </div>

@@ -17,6 +17,7 @@ export async function PATCH(
       ...(body.project !== undefined && { project: body.project }),
       ...(body.priority !== undefined && { priority: body.priority }),
       ...(body.status !== undefined && { status: body.status }),
+      ...(body.dueDate !== undefined && { due_date: body.dueDate }),
       updated_at: new Date().toISOString(),
     })
     .eq('id', params.id)
@@ -27,6 +28,7 @@ export async function PATCH(
 
   return NextResponse.json({
     id: data.id,
+    type: data.type ?? 'task',
     title: data.title,
     description: data.description,
     assignee: data.assignee,
@@ -35,6 +37,7 @@ export async function PATCH(
     status: data.status,
     createdAt: data.created_at,
     updatedAt: data.updated_at,
+    dueDate: data.due_date,
   })
 }
 

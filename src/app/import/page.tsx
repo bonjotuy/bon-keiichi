@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { Task } from '@/types/task'
+import { Task, ItemType } from '@/types/task'
 
 interface ExtractedTask {
   title: string
@@ -9,6 +9,8 @@ interface ExtractedTask {
   assignee: Task['assignee']
   project: string
   priority: Task['priority']
+  type: ItemType
+  dueDate?: string | null
 }
 
 export default function ImportPage() {
@@ -51,6 +53,10 @@ export default function ImportPage() {
     })
   }
 
+  const updateTask = (i: number, updates: Partial<ExtractedTask>) => {
+    setExtracted(prev => prev.map((t, idx) => idx === i ? { ...t, ...updates } : t))
+  }
+
   const saveSelected = async () => {
     const tasks = extracted.filter((_, i) => selected.has(i))
     if (tasks.length === 0) return
@@ -61,7 +67,7 @@ export default function ImportPage() {
         fetch('/api/tasks', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ ...task, status: '未着手' }),
+          body: JSON.stringify({ ...task, status: '未着手', dueDate: task.dueDate || null }),
         })
       ))
       setSuccess(`${tasks.length}件のタスクを追加しました！`)
@@ -81,16 +87,10 @@ export default function ImportPage() {
     '低': 'bg-green-100 text-green-700',
   }
 
-  const assigneeEmoji: Record<string, string> = {
-    'ボンちゃん': '🎸',
-    '杉浦さん': '🎯',
-    '両方': '🎸🎯',
-  }
-
   return (
     <div className="max-w-2xl mx-auto py-6 px-4 space-y-6">
       <div>
-        <h1 className="text-xl font-bold text-gray-800">🎙️ ミーティング文字起こし取り込み</h1>
+        <h1 className="text-xl font-bold text-gray-800">ミーティング文字起こし取り込み</h1>
         <p className="text-sm text-gray-500 mt-1">Google Meetの文字起こしを貼り付けると、AIがタスクを自動抽出します</p>
       </div>
 
@@ -111,13 +111,13 @@ export default function ImportPage() {
             disabled={loading || !transcript.trim()}
             className="w-full py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 font-medium text-sm disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            {loading ? '🤖 AIが分析中...' : '🤖 タスクを自動抽出する'}
+            {loading ? 'AIが分析中...' : 'タスクを自動抽出する'}
           </button>
         </div>
       ) : (
         <div className="space-y-3">
           <div className="flex items-center justify-between">
-            <p className="text-sm font-medium text-gray-700">{extracted.length}件のタスクが見つかりました</p>
+            <p className="text-sm font-medium text-gray-700">{extracted.length}件が見つかりました</p>
             <button onClick={() => setExtracted([])} className="text-xs text-gray-400 hover:text-gray-600">
               やり直す
             </button>
@@ -125,8 +125,7 @@ export default function ImportPage() {
           {extracted.map((task, i) => (
             <div
               key={i}
-              onClick={() => toggleSelect(i)}
-              className={`bg-white rounded-xl border-l-4 p-4 cursor-pointer transition-all ${
+              className={`bg-white rounded-xl border-l-4 p-4 transition-all ${
                 selected.has(i) ? 'border-orange-400 shadow-sm' : 'border-gray-200 opacity-60'
               }`}
             >
@@ -135,19 +134,53 @@ export default function ImportPage() {
                   type="checkbox"
                   checked={selected.has(i)}
                   onChange={() => toggleSelect(i)}
-                  onClick={e => e.stopPropagation()}
                   className="mt-1 accent-orange-500"
                 />
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2 flex-wrap mb-1">
-                    <span>{assigneeEmoji[task.assignee]}</span>
+                <div className="flex-1 min-w-0 space-y-2">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    {/* Type toggle */}
+                    <div className="flex bg-gray-100 rounded-lg p-0.5 gap-0.5">
+                      <button
+                        type="button"
+                        onClick={() => updateTask(i, { type: 'task' })}
+                        className={`px-2 py-1 rounded-md text-xs font-semibold transition-all ${task.type === 'task' ? 'bg-white text-gray-800 shadow-sm' : 'text-gray-400'}`}
+                      >
+                        タスク
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => updateTask(i, { type: 'idea' })}
+                        className={`px-2 py-1 rounded-md text-xs font-semibold transition-all ${task.type === 'idea' ? 'bg-white text-gray-800 shadow-sm' : 'text-gray-400'}`}
+                      >
+                        アイデア
+                      </button>
+                    </div>
                     <span className="font-semibold text-gray-800 text-sm">{task.title}</span>
                   </div>
-                  {task.description && <p className="text-xs text-gray-500 mb-2">{task.description}</p>}
-                  <div className="flex gap-2 flex-wrap">
+                  {task.description && <p className="text-xs text-gray-500">{task.description}</p>}
+                  <div className="flex gap-2 flex-wrap items-center">
                     <span className="text-xs bg-orange-100 text-orange-700 px-2 py-0.5 rounded-full">{task.project}</span>
                     <span className={`text-xs px-2 py-0.5 rounded-full ${priorityColors[task.priority]}`}>優先度: {task.priority}</span>
                     <span className="text-xs text-gray-500">{task.assignee}</span>
+                  </div>
+                  {/* Due date input */}
+                  <div className="flex items-center gap-2">
+                    <label className="text-xs text-gray-400">期限:</label>
+                    <input
+                      type="date"
+                      value={task.dueDate || ''}
+                      onChange={e => updateTask(i, { dueDate: e.target.value || null })}
+                      className="border border-gray-200 rounded-lg px-2 py-1 text-xs focus:outline-none focus:border-orange-400"
+                    />
+                    {task.dueDate && (
+                      <button
+                        type="button"
+                        onClick={() => updateTask(i, { dueDate: null })}
+                        className="text-xs text-gray-300 hover:text-gray-500"
+                      >
+                        ×
+                      </button>
+                    )}
                   </div>
                 </div>
               </div>
@@ -158,7 +191,7 @@ export default function ImportPage() {
             disabled={saving || selected.size === 0}
             className="w-full py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 font-medium text-sm disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            {saving ? '保存中...' : `✅ 選択した${selected.size}件を追加する`}
+            {saving ? '保存中...' : `選択した${selected.size}件を追加する`}
           </button>
         </div>
       )}

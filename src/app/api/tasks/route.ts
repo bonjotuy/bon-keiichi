@@ -13,6 +13,7 @@ function toTask(row: Record<string, unknown>) {
     status: row.status,
     createdAt: row.created_at,
     updatedAt: row.updated_at,
+    dueDate: row.due_date,
   }
 }
 
@@ -41,6 +42,7 @@ export async function POST(req: NextRequest) {
       project: body.project,
       priority: body.priority,
       status: body.status || '未着手',
+      due_date: body.dueDate || null,
     })
     .select()
     .single()
