@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useRef } from 'react'
 import { Task, ItemType } from '@/types/task'
 import { PROJECTS } from '@/lib/projects'
 
@@ -19,9 +19,31 @@ export default function ImportPage() {
   const [extracted, setExtracted] = useState<ExtractedTask[]>([])
   const [selected, setSelected] = useState<Set<number>>(new Set())
   const [loading, setLoading] = useState(false)
+  const [fileLoading, setFileLoading] = useState(false)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
   const [success, setSuccess] = useState('')
+  const fileInputRef = useRef<HTMLInputElement>(null)
+
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+    setFileLoading(true)
+    setError('')
+    try {
+      const formData = new FormData()
+      formData.append('file', file)
+      const res = await fetch('/api/extract-text', { method: 'POST', body: formData })
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.error || 'ファイルの読み込みに失敗しました')
+      setTranscript(data.text)
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'ファイルの読み込みに失敗しました')
+    } finally {
+      setFileLoading(false)
+      if (fileInputRef.current) fileInputRef.current.value = ''
+    }
+  }
 
   const analyze = async () => {
     if (!transcript.trim()) return
@@ -100,12 +122,40 @@ export default function ImportPage() {
 
       {extracted.length === 0 ? (
         <div className="bg-white rounded-xl shadow-sm border border-orange-100 p-4 space-y-3">
+          {/* File upload */}
+          <div
+            className="border-2 border-dashed border-gray-200 rounded-xl p-4 text-center cursor-pointer hover:border-orange-300 transition-colors"
+            onClick={() => fileInputRef.current?.click()}
+          >
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept=".pdf,.txt,.text"
+              className="hidden"
+              onChange={handleFileUpload}
+            />
+            {fileLoading ? (
+              <p className="text-sm text-orange-500">ファイルを読み込み中...</p>
+            ) : (
+              <>
+                <p className="text-sm text-gray-400">PDFまたはテキストファイルをアップロード</p>
+                <p className="text-xs text-gray-300 mt-1">.pdf / .txt に対応</p>
+              </>
+            )}
+          </div>
+
+          <div className="flex items-center gap-3 text-xs text-gray-300">
+            <div className="flex-1 h-px bg-gray-100" />
+            または テキストを直接貼り付け
+            <div className="flex-1 h-px bg-gray-100" />
+          </div>
+
           <textarea
             value={transcript}
             onChange={e => setTranscript(e.target.value)}
             placeholder="ここにGoogle Meetの文字起こしテキストを貼り付けてください..."
             className="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-orange-400 resize-none"
-            rows={12}
+            rows={8}
           />
           <button
             onClick={analyze}
