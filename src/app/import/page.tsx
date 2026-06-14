@@ -46,7 +46,7 @@ export default function ImportPage() {
     }
   }
 
-  const splitIntoChunks = (text: string, maxChars = 3000): string[] => {
+  const splitIntoChunks = (text: string, maxChars = 10000): string[] => {
     if (text.length <= maxChars) return [text]
     const chunks: string[] = []
     let remaining = text
