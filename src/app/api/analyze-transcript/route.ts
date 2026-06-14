@@ -46,24 +46,34 @@ ${transcript}`,
   // Try to extract JSON from various formats
   const patterns = [
     /```json\s*([\s\S]*?)\s*```/,
-    /```\s*([\s\S]*?)\s*```/,
+    /```\s*(\{[\s\S]*?\})\s*```/,
+    /(\{[\s\S]*"tasks"[\s\S]*\})/,
     /(\{[\s\S]*\})/,
   ]
 
   let jsonStr: string | null = null
   for (const pattern of patterns) {
     const match = text.match(pattern)
-    if (match) { jsonStr = match[1]; break }
+    if (match) { jsonStr = match[1].trim(); break }
   }
 
+  // タスクなしとして返す（エラーにしない）
   if (!jsonStr) {
-    return NextResponse.json({ error: 'AIからの応答を解析できませんでした', raw: text }, { status: 500 })
+    return NextResponse.json({ tasks: [] })
   }
 
   try {
     const parsed = JSON.parse(jsonStr)
-    return NextResponse.json(parsed)
+    return NextResponse.json({ tasks: parsed.tasks || [] })
   } catch {
-    return NextResponse.json({ error: 'AIからの応答を解析できませんでした', raw: text }, { status: 500 })
+    // 最終手段: tasks配列を直接探す
+    const arrayMatch = text.match(/\[\s*\{[\s\S]*?\}\s*\]/)
+    if (arrayMatch) {
+      try {
+        const tasks = JSON.parse(arrayMatch[0])
+        return NextResponse.json({ tasks })
+      } catch { /* fall through */ }
+    }
+    return NextResponse.json({ tasks: [] })
   }
 }
