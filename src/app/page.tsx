@@ -54,6 +54,11 @@ export default function Home() {
     setTasks(prev => prev.filter(t => t.id !== id))
   }
 
+  const handleDueDateChange = async (id: string, dueDate: string | null) => {
+    await fetch(`/api/tasks/${id}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ dueDate }) })
+    setTasks(prev => prev.map(t => t.id === id ? { ...t, dueDate: dueDate || undefined } : t))
+  }
+
   return (
     <div className="space-y-5">
       {/* Stats */}
@@ -146,7 +151,7 @@ export default function Home() {
                     return ({ '高': 0, '中': 1, '低': 2 }[a.priority] ?? 1) - ({ '高': 0, '中': 1, '低': 2 }[b.priority] ?? 1)
                   })
                   .map(task => (
-                    <TaskCard key={task.id} task={task} onStatusChange={handleStatusChange} onDelete={handleDelete} />
+                    <TaskCard key={task.id} task={task} onStatusChange={handleStatusChange} onDelete={handleDelete} onDueDateChange={handleDueDateChange} />
                   ))}
               </div>
             </div>

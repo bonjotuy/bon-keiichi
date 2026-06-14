@@ -24,10 +24,7 @@ export default function RootLayout({
               <a href="/" className="px-3 py-1.5 rounded-lg text-sm text-gray-500 hover:bg-gray-100 hover:text-gray-800 transition-colors font-medium">
                 タスク
               </a>
-              <a href="/meeting" className="px-3 py-1.5 rounded-lg text-sm text-gray-500 hover:bg-gray-100 hover:text-gray-800 transition-colors font-medium">
-                月曜MTG
-              </a>
-              <a href="/import" className="px-3 py-1.5 rounded-lg text-sm text-gray-500 hover:bg-gray-100 hover:text-gray-800 transition-colors font-medium">
+<a href="/import" className="px-3 py-1.5 rounded-lg text-sm text-gray-500 hover:bg-gray-100 hover:text-gray-800 transition-colors font-medium">
                 取り込み
               </a>
             </nav>

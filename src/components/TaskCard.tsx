@@ -1,11 +1,13 @@
 'use client'
 
+import { useState } from 'react'
 import { Task, Status } from '@/types/task'
 
 interface TaskCardProps {
   task: Task
   onStatusChange: (id: string, status: Status) => void
   onDelete: (id: string) => void
+  onDueDateChange: (id: string, dueDate: string | null) => void
 }
 
 const priorityDot: Record<string, string> = {
@@ -13,14 +15,6 @@ const priorityDot: Record<string, string> = {
   '中': 'bg-yellow-400',
   '低': 'bg-green-400',
 }
-
-const statusConfig: Record<string, { label: string; color: string }> = {
-  '未着手': { label: '未着手', color: 'bg-gray-100 text-gray-500' },
-  '進行中': { label: '進行中', color: 'bg-blue-50 text-blue-600' },
-  '完了': { label: '完了', color: 'bg-green-50 text-green-600' },
-}
-
-const statusOrder: Status[] = ['未着手', '進行中', '完了']
 
 function getDueDateColor(dueDate: string): string {
   const today = new Date()
@@ -33,10 +27,10 @@ function getDueDateColor(dueDate: string): string {
   return 'text-gray-400'
 }
 
-export default function TaskCard({ task, onStatusChange, onDelete }: TaskCardProps) {
+export default function TaskCard({ task, onStatusChange, onDelete, onDueDateChange }: TaskCardProps) {
+  const [editingDue, setEditingDue] = useState(false)
   const isDone = task.status === '完了'
   const isIdea = task.type === 'idea'
-  const nextStatus = statusOrder[(statusOrder.indexOf(task.status) + 1) % statusOrder.length]
 
   return (
     <div className={`bg-white rounded-xl border transition-all ${isDone ? 'border-gray-100 opacity-60' : 'border-gray-200 hover:border-gray-300 hover:shadow-sm'}`}>
@@ -78,28 +72,31 @@ export default function TaskCard({ task, onStatusChange, onDelete }: TaskCardPro
               <div className="flex items-center gap-2 ml-4 flex-wrap">
                 <span className="text-xs text-gray-400">{task.assignee}</span>
                 {!isIdea && (
-                  <span className={`text-xs px-2 py-0.5 rounded-full ${statusConfig[task.status].color}`}>
-                    {statusConfig[task.status].label}
-                  </span>
-                )}
-                {task.dueDate && (
-                  <span className={`text-xs font-medium ${getDueDateColor(task.dueDate)}`}>
-                    期限: {task.dueDate}
-                  </span>
+                  editingDue ? (
+                    <input
+                      type="date"
+                      defaultValue={task.dueDate || ''}
+                      autoFocus
+                      className="border border-orange-300 rounded px-1.5 py-0.5 text-xs focus:outline-none"
+                      onChange={e => {
+                        onDueDateChange(task.id, e.target.value || null)
+                      }}
+                      onBlur={() => setEditingDue(false)}
+                    />
+                  ) : (
+                    <button
+                      onClick={() => setEditingDue(true)}
+                      className={`text-xs font-medium ${task.dueDate ? getDueDateColor(task.dueDate) : 'text-gray-300 hover:text-gray-400'}`}
+                    >
+                      {task.dueDate ? `期限: ${task.dueDate}` : '＋期限'}
+                    </button>
+                  )
                 )}
               </div>
             </div>
 
             {/* Actions */}
             <div className="flex items-center gap-1 shrink-0">
-              {!isIdea && !isDone && (
-                <button
-                  onClick={() => onStatusChange(task.id, nextStatus)}
-                  className="text-xs text-gray-400 hover:text-gray-600 px-2 py-1 rounded-lg hover:bg-gray-50 whitespace-nowrap"
-                >
-                  → {nextStatus}
-                </button>
-              )}
               <button
                 onClick={() => onDelete(task.id)}
                 className="text-gray-300 hover:text-red-400 p-1 rounded-lg hover:bg-red-50 transition-colors"
