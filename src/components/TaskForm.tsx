@@ -14,7 +14,7 @@ export default function TaskForm({ onAdd, projects: existingProjects, defaultTyp
   const [type, setType] = useState<ItemType>(defaultType)
   const [title, setTitle] = useState('')
   const [description, setDescription] = useState('')
-  const [assignee, setAssignee] = useState<Assignee>('ボンちゃん')
+  const [assignee, setAssignee] = useState<Assignee>('ぼんちゃん')
   const [project, setProject] = useState<string>(PROJECTS[0])
   const [priority, setPriority] = useState<Priority>('中')
   const [dueDate, setDueDate] = useState('')
@@ -36,6 +36,7 @@ export default function TaskForm({ onAdd, projects: existingProjects, defaultTyp
       priority,
       status: '未着手',
       dueDate: dueDate || undefined,
+      deleted: false,
     })
     setTitle(''); setDescription(''); setProject(PROJECTS[0] as string); setDueDate(''); setOpen(false)
   }
@@ -72,8 +73,8 @@ export default function TaskForm({ onAdd, projects: existingProjects, defaultTyp
       <div className="flex gap-2 flex-wrap">
         <select value={assignee} onChange={e => setAssignee(e.target.value as Assignee)}
           className="border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-orange-400 bg-white">
-          <option value="ボンちゃん">ボンちゃん</option>
-          <option value="杉浦さん">杉浦さん</option>
+          <option value="ぼんちゃん">ぼんちゃん</option>
+          <option value="恵一">恵一</option>
         </select>
         {!isIdea && (
           <>

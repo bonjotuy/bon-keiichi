@@ -2,33 +2,39 @@
   "tasks": [
     {
       "id": "1",
+      "type": "task",
       "title": "YouTube動画の企画書作成",
       "description": "次回動画のテーマとシナリオを考える",
-      "assignee": "ボンちゃん",
+      "assignee": "ぼんちゃん",
       "project": "YouTube",
       "priority": "高",
       "status": "未着手",
-      "createdAt": "2026-06-14T00:00:00.000Z"
+      "createdAt": "2026-06-14T00:00:00.000Z",
+      "deleted": false
     },
     {
       "id": "2",
+      "type": "task",
       "title": "楽曲のミックスダウン",
       "description": "先週録音した音源をミックスする",
-      "assignee": "杉浦さん",
+      "assignee": "恵一",
       "project": "音楽制作",
       "priority": "中",
       "status": "進行中",
-      "createdAt": "2026-06-14T00:00:00.000Z"
+      "createdAt": "2026-06-14T00:00:00.000Z",
+      "deleted": false
     },
     {
       "id": "3",
+      "type": "task",
       "title": "イベント会場の候補出し",
       "description": "夏のイベント用に会場を3箇所リストアップ",
-      "assignee": "両方",
+      "assignee": "ぼんちゃん",
       "project": "イベント企画",
       "priority": "高",
       "status": "未着手",
-      "createdAt": "2026-06-14T00:00:00.000Z"
+      "createdAt": "2026-06-14T00:00:00.000Z",
+      "deleted": false
     }
   ]
 }

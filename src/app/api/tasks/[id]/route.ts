@@ -1,6 +1,23 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getSupabase } from '@/lib/supabase'
 
+function toTask(data: Record<string, unknown>) {
+  return {
+    id: data.id,
+    type: data.type ?? 'task',
+    title: data.title,
+    description: data.description,
+    assignee: data.assignee,
+    project: data.project,
+    priority: data.priority,
+    status: data.status,
+    createdAt: data.created_at,
+    updatedAt: data.updated_at,
+    dueDate: data.due_date,
+    deleted: data.deleted ?? false,
+  }
+}
+
 export async function PATCH(
   req: NextRequest,
   { params }: { params: { id: string } }
@@ -18,6 +35,7 @@ export async function PATCH(
       ...(body.priority !== undefined && { priority: body.priority }),
       ...(body.status !== undefined && { status: body.status }),
       ...(body.dueDate !== undefined && { due_date: body.dueDate }),
+      ...(body.deleted !== undefined && { deleted: body.deleted }),
       updated_at: new Date().toISOString(),
     })
     .eq('id', params.id)
@@ -25,20 +43,7 @@ export async function PATCH(
     .single()
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
-
-  return NextResponse.json({
-    id: data.id,
-    type: data.type ?? 'task',
-    title: data.title,
-    description: data.description,
-    assignee: data.assignee,
-    project: data.project,
-    priority: data.priority,
-    status: data.status,
-    createdAt: data.created_at,
-    updatedAt: data.updated_at,
-    dueDate: data.due_date,
-  })
+  return NextResponse.json(toTask(data))
 }
 
 export async function DELETE(
