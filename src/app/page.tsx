@@ -90,6 +90,15 @@ export default function Home() {
     setTasks(prev => prev.map(t => t.id === id ? { ...t, deleted: false } : t))
   }
 
+  const handleUpdate = async (id: string, updates: Partial<Task>) => {
+    await fetch(`/api/tasks/${id}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(updates),
+    })
+    setTasks(prev => prev.map(t => t.id === id ? { ...t, ...updates } : t))
+  }
+
   const handleDueDateChange = async (id: string, dueDate: string | null) => {
     await fetch(`/api/tasks/${id}`, {
       method: 'PATCH',
@@ -186,6 +195,7 @@ export default function Home() {
               onDelete={handleDelete}
               onRestore={handleRestore}
               onDueDateChange={handleDueDateChange}
+              onUpdate={handleUpdate}
               isTrash={filterStatus === 'ゴミ箱'}
             />
           ))}
