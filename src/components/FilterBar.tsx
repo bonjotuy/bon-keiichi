@@ -10,7 +10,7 @@ interface FilterBarProps {
   onProjectChange: (project: string) => void
 }
 
-const assignees: (Assignee | '全員')[] = ['全員', 'ボンちゃん', '杉浦さん']
+const assignees: (Assignee | '全員')[] = ['全員', 'ぼんちゃん', '恵一']
 
 export default function FilterBar({
   selectedAssignee,
