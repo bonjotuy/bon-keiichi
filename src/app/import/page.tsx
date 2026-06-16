@@ -257,7 +257,14 @@ export default function ImportPage() {
                       {PROJECTS.map(p => <option key={p} value={p}>{p}</option>)}
                     </select>
                     <span className={`text-xs px-2 py-0.5 rounded-full ${priorityColors[task.priority]}`}>優先度: {task.priority}</span>
-                    <span className="text-xs text-gray-500">{task.assignee}</span>
+                    <select
+                      value={task.assignee}
+                      onChange={e => updateTask(i, { assignee: e.target.value as Task['assignee'] })}
+                      className="text-xs border border-gray-200 rounded-lg px-2 py-1 bg-white focus:outline-none focus:border-orange-400"
+                    >
+                      <option value="ぼんちゃん">ぼんちゃん</option>
+                      <option value="恵一">恵一</option>
+                    </select>
                   </div>
                   {/* Due date input */}
                   <div className="flex items-center gap-2">
