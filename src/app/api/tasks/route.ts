@@ -1,41 +1,54 @@
 import { NextRequest, NextResponse } from 'next/server'
-import fs from 'fs'
-import path from 'path'
-import { Task } from '@/types/task'
+import { getSupabase } from '@/lib/supabase'
 
-const DATA_FILE = path.join(process.cwd(), 'data', 'tasks.json')
-
-function readTasks(): Task[] {
-  const raw = fs.readFileSync(DATA_FILE, 'utf-8')
-  return JSON.parse(raw).tasks || []
-}
-
-function writeTasks(tasks: Task[]) {
-  fs.writeFileSync(DATA_FILE, JSON.stringify({ tasks }, null, 2))
+function toTask(row: Record<string, unknown>) {
+  return {
+    id: row.id,
+    type: row.type ?? 'task',
+    title: row.title,
+    description: row.description,
+    assignee: row.assignee,
+    project: row.project,
+    priority: row.priority,
+    status: row.status,
+    createdAt: row.created_at,
+    updatedAt: row.updated_at,
+    dueDate: row.due_date,
+    deleted: row.deleted ?? false,
+  }
 }
 
 export async function GET() {
-  const tasks = readTasks()
-  return NextResponse.json({ tasks })
+  const supabase = getSupabase()
+  const { data, error } = await supabase
+    .from('tasks')
+    .select('*')
+    .order('created_at', { ascending: false })
+
+  if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+  return NextResponse.json({ tasks: (data || []).map(toTask) })
 }
 
 export async function POST(req: NextRequest) {
+  const supabase = getSupabase()
   const body = await req.json()
-  const tasks = readTasks()
-  const newTask: Task = {
-    id: Date.now().toString(),
-    type: body.type || 'task',
-    title: body.title,
-    description: body.description || '',
-    assignee: body.assignee,
-    project: body.project,
-    priority: body.priority,
-    status: body.status || '未着手',
-    createdAt: new Date().toISOString(),
-    dueDate: body.dueDate || undefined,
-    deleted: false,
-  }
-  tasks.unshift(newTask)
-  writeTasks(tasks)
-  return NextResponse.json(newTask, { status: 201 })
+
+  const { data, error } = await supabase
+    .from('tasks')
+    .insert({
+      type: body.type || 'task',
+      title: body.title,
+      description: body.description || '',
+      assignee: body.assignee,
+      project: body.project,
+      priority: body.priority,
+      status: body.status || '未着手',
+      due_date: body.dueDate || null,
+      deleted: false,
+    })
+    .select()
+    .single()
+
+  if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+  return NextResponse.json(toTask(data), { status: 201 })
 }
