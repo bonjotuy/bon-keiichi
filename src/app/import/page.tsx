@@ -245,9 +245,19 @@ export default function ImportPage() {
                         アイデア
                       </button>
                     </div>
-                    <span className="font-semibold text-gray-800 text-sm">{task.title}</span>
+                    <input
+                      value={task.title}
+                      onChange={e => updateTask(i, { title: e.target.value })}
+                      className="font-semibold text-gray-800 text-sm border-b border-transparent hover:border-gray-300 focus:border-orange-400 focus:outline-none bg-transparent flex-1 min-w-0"
+                    />
                   </div>
-                  {task.description && <p className="text-xs text-gray-500">{task.description}</p>}
+                  <textarea
+                    value={task.description}
+                    onChange={e => updateTask(i, { description: e.target.value })}
+                    placeholder="説明（任意）"
+                    rows={2}
+                    className="text-xs text-gray-500 w-full border border-transparent hover:border-gray-200 focus:border-orange-400 focus:outline-none rounded-lg px-1 resize-none bg-transparent"
+                  />
                   <div className="flex gap-2 flex-wrap items-center">
                     <select
                       value={task.project}
@@ -256,7 +266,15 @@ export default function ImportPage() {
                     >
                       {PROJECTS.map(p => <option key={p} value={p}>{p}</option>)}
                     </select>
-                    <span className={`text-xs px-2 py-0.5 rounded-full ${priorityColors[task.priority]}`}>優先度: {task.priority}</span>
+                    <select
+                      value={task.priority}
+                      onChange={e => updateTask(i, { priority: e.target.value as Task['priority'] })}
+                      className={`text-xs px-2 py-1 rounded-full border-0 focus:outline-none ${priorityColors[task.priority]}`}
+                    >
+                      <option value="高">🔴 高</option>
+                      <option value="中">🟡 中</option>
+                      <option value="低">🟢 低</option>
+                    </select>
                     <select
                       value={task.assignee}
                       onChange={e => updateTask(i, { assignee: e.target.value as Task['assignee'] })}
