@@ -16,9 +16,14 @@ export default function TaskForm({ onAdd, projects: existingProjects, defaultTyp
   const [description, setDescription] = useState('')
   const [assignee, setAssignee] = useState<Assignee>('ぼんちゃん')
   const [project, setProject] = useState<string>(PROJECTS[0])
+  const [isNewProject, setIsNewProject] = useState(false)
+  const [newProjectName, setNewProjectName] = useState('')
   const [priority, setPriority] = useState<Priority>('中')
   const [dueDate, setDueDate] = useState('')
   const [error, setError] = useState('')
+
+  // 既存プロジェクト（固定リスト＋タスクから動的に追加されたもの）
+  const allProjects = [...new Set([...PROJECTS, ...existingProjects])].filter(Boolean)
 
   const isIdea = type === 'idea'
 
@@ -27,18 +32,20 @@ export default function TaskForm({ onAdd, projects: existingProjects, defaultTyp
     if (!title.trim()) { setError('タイトルは必須です'); return }
     if (!isIdea && !project) { setError('プロジェクト名は必須です'); return }
     setError('')
+    const finalProject = isIdea ? 'アイデア' : (isNewProject ? newProjectName.trim() : project)
+    if (!isIdea && isNewProject && !newProjectName.trim()) { setError('プロジェクト名を入力してください'); return }
     onAdd({
       type,
       title: title.trim(),
       description: description.trim(),
       assignee,
-      project: isIdea ? 'アイデア' : project.trim(),
+      project: finalProject,
       priority,
       status: '未着手',
       dueDate: dueDate || undefined,
       deleted: false,
     })
-    setTitle(''); setDescription(''); setProject(PROJECTS[0] as string); setDueDate(''); setOpen(false)
+    setTitle(''); setDescription(''); setProject(PROJECTS[0] as string); setNewProjectName(''); setIsNewProject(false); setDueDate(''); setOpen(false)
   }
 
   if (!open) return (
@@ -84,10 +91,28 @@ export default function TaskForm({ onAdd, projects: existingProjects, defaultTyp
               <option value="中">🟡 中</option>
               <option value="低">🟢 低</option>
             </select>
-            <select value={project} onChange={e => setProject(e.target.value)}
-              className="border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-orange-400 bg-white flex-1">
-              {PROJECTS.map(p => <option key={p} value={p}>{p}</option>)}
-            </select>
+            {isNewProject ? (
+              <div className="flex gap-1 flex-1">
+                <input
+                  value={newProjectName}
+                  onChange={e => setNewProjectName(e.target.value)}
+                  placeholder="新しいプロジェクト名"
+                  autoFocus
+                  className="border border-orange-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-orange-500 flex-1"
+                />
+                <button type="button" onClick={() => { setIsNewProject(false); setNewProjectName('') }}
+                  className="text-xs text-gray-400 hover:text-gray-600 px-2">✕</button>
+              </div>
+            ) : (
+              <select
+                value={project}
+                onChange={e => { if (e.target.value === '__new__') { setIsNewProject(true) } else { setProject(e.target.value) } }}
+                className="border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-orange-400 bg-white flex-1"
+              >
+                {allProjects.map(p => <option key={p} value={p}>{p}</option>)}
+                <option value="__new__">＋ 新規プロジェクト...</option>
+              </select>
+            )}
             <div className="flex items-center gap-2">
               <label className="text-xs text-gray-400 whitespace-nowrap">期限</label>
               <input
