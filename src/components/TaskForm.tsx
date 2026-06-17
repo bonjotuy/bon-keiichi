@@ -1,5 +1,5 @@
 'use client'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Task, Assignee, Priority, ItemType } from '@/types/task'
 import { PROJECTS } from '@/lib/projects'
 
@@ -7,10 +7,16 @@ interface Props {
   onAdd: (task: Omit<Task, 'id' | 'createdAt'>) => void
   projects: string[]
   defaultType?: ItemType
+  forceOpen?: boolean
+  onOpenChange?: (open: boolean) => void
 }
 
-export default function TaskForm({ onAdd, projects: existingProjects, defaultType = 'task' }: Props) {
+export default function TaskForm({ onAdd, projects: existingProjects, defaultType = 'task', forceOpen, onOpenChange }: Props) {
   const [open, setOpen] = useState(false)
+
+  useEffect(() => {
+    if (forceOpen) { setOpen(true); onOpenChange?.(false) }
+  }, [forceOpen, onOpenChange])
   const [type, setType] = useState<ItemType>(defaultType)
   const [title, setTitle] = useState('')
   const [description, setDescription] = useState('')

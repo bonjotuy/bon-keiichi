@@ -20,12 +20,15 @@ export default function RootLayout({
               <span className="text-xl">🎸🎯</span>
               <span className="font-bold text-gray-800 tracking-tight">ボン恵一PM</span>
             </a>
-            <nav className="flex gap-1">
+            <nav className="flex gap-1 items-center">
               <a href="/" className="px-3 py-1.5 rounded-lg text-sm text-gray-500 hover:bg-gray-100 hover:text-gray-800 transition-colors font-medium">
                 タスク
               </a>
-<a href="/import" className="px-3 py-1.5 rounded-lg text-sm text-gray-500 hover:bg-gray-100 hover:text-gray-800 transition-colors font-medium">
+              <a href="/import" className="px-3 py-1.5 rounded-lg text-sm text-gray-500 hover:bg-gray-100 hover:text-gray-800 transition-colors font-medium">
                 取り込み
+              </a>
+              <a href="/?new=1" className="ml-1 px-3 py-1.5 rounded-lg text-sm bg-orange-500 text-white hover:bg-orange-600 transition-colors font-medium">
+                新規タスク＋
               </a>
             </nav>
           </div>
