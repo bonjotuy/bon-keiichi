@@ -175,9 +175,17 @@ function HomeContent() {
     gray:   'text-gray-700',
   }
 
-  const statusButtons: { label: string; value: StatusFilter }[] = [
-    { label: '未完了',    value: '未完了' },
-    { label: '進行中',    value: '進行中' },
+  // ステータス別件数（人+プロジェクトフィルター適用後）
+  const statusCount = (targetStatus: string) =>
+    activeTasks.filter(t =>
+      (filterPerson === '全員' || t.assignee === filterPerson) &&
+      (filterProject === 'すべて' || t.project === filterProject) &&
+      t.status === targetStatus
+    ).length
+
+  const statusButtons: { label: string; value: StatusFilter; count?: number }[] = [
+    { label: '未完了',    value: '未完了',  count: statusCount('未着手') },
+    { label: '進行中',    value: '進行中',  count: statusCount('進行中') },
     { label: '完了済み',  value: '完了済み' },
     { label: '🗑 ゴミ箱', value: 'ゴミ箱' },
     { label: 'すべて',    value: 'すべて' },
@@ -235,8 +243,11 @@ function HomeContent() {
         <div className="flex gap-1.5 flex-wrap">
           {statusButtons.map(btn => (
             <button key={btn.value} onClick={() => setFilterStatus(btn.value)}
-              className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all ${filterStatus === btn.value ? 'bg-gray-800 text-white' : 'bg-white text-gray-500 border border-gray-200 hover:border-gray-400'}`}>
+              className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all flex items-center gap-1 ${filterStatus === btn.value ? 'bg-gray-800 text-white' : 'bg-white text-gray-500 border border-gray-200 hover:border-gray-400'}`}>
               {btn.label}
+              {btn.count !== undefined && (
+                <span className={`text-xs ${filterStatus === btn.value ? 'text-white/70' : 'text-gray-400'}`}>{btn.count}</span>
+              )}
             </button>
           ))}
         </div>
