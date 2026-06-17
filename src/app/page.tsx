@@ -1,5 +1,6 @@
 'use client'
-import { useEffect, useState } from 'react'
+import { useEffect, useState, Suspense } from 'react'
+import { useSearchParams, useRouter } from 'next/navigation'
 import { Task, Status } from '@/types/task'
 import TaskCard from '@/components/TaskCard'
 import TaskForm from '@/components/TaskForm'
@@ -7,12 +8,22 @@ import TaskForm from '@/components/TaskForm'
 type PersonFilter = 'ぼんちゃん' | '恵一' | '全員'
 type StatusFilter = '未完了' | '進行中' | '完了済み' | 'ゴミ箱' | 'すべて'
 
-export default function Home() {
+function HomeContent() {
   const [tasks, setTasks] = useState<Task[]>([])
   const [filterPerson, setFilterPerson] = useState<PersonFilter>('全員')
   const [filterProject, setFilterProject] = useState<string>('すべて')
   const [filterStatus, setFilterStatus] = useState<StatusFilter>('未完了')
   const [loading, setLoading] = useState(true)
+  const [formOpen, setFormOpen] = useState(false)
+  const searchParams = useSearchParams()
+  const router = useRouter()
+
+  useEffect(() => {
+    if (searchParams.get('new') === '1') {
+      setFormOpen(true)
+      router.replace('/')
+    }
+  }, [searchParams, router])
 
   useEffect(() => {
     fetch('/api/tasks').then(r => r.json()).then(data => {
@@ -264,8 +275,16 @@ export default function Home() {
       )}
 
       {filterStatus !== 'ゴミ箱' && (
-        <TaskForm onAdd={handleAdd} projects={projects} defaultType="task" />
+        <TaskForm onAdd={handleAdd} projects={projects} defaultType="task" forceOpen={formOpen} onOpenChange={setFormOpen} />
       )}
     </div>
+  )
+}
+
+export default function Home() {
+  return (
+    <Suspense>
+      <HomeContent />
+    </Suspense>
   )
 }
