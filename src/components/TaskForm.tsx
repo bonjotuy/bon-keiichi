@@ -90,23 +90,23 @@ export default function TaskForm({ onAdd, projects: existingProjects, defaultTyp
           <option value="恵一">恵一</option>
         </select>
         {!isIdea && (
-          <>
-            <select value={priority} onChange={e => setPriority(e.target.value as Priority)}
-              className="border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-orange-400 bg-white">
-              <option value="高">🔴 高</option>
-              <option value="中">🟡 中</option>
-              <option value="低">🟢 低</option>
-            </select>
-            {isNewProject ? (
-              <div className="flex gap-1 flex-1">
-                <input
-                  value={newProjectName}
-                  onChange={e => setNewProjectName(e.target.value)}
-                  placeholder="新しいプロジェクト名"
-                  autoFocus
-                  className="border border-orange-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-orange-500 flex-1"
-                />
-                <button type="button" onClick={() => { setIsNewProject(false); setNewProjectName('') }}
+          <select value={priority} onChange={e => setPriority(e.target.value as Priority)}
+            className="border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-orange-400 bg-white">
+            <option value="高">🔴 高</option>
+            <option value="中">🟡 中</option>
+            <option value="低">🟢 低</option>
+          </select>
+        )}
+        {isNewProject ? (
+          <div className="flex gap-1 flex-1">
+            <input
+              value={newProjectName}
+              onChange={e => setNewProjectName(e.target.value)}
+              placeholder="新しいプロジェクト名"
+              autoFocus
+              className="border border-orange-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-orange-500 flex-1"
+            />
+            <button type="button" onClick={() => { setIsNewProject(false); setNewProjectName('') }}
                   className="text-xs text-gray-400 hover:text-gray-600 px-2">✕</button>
               </div>
             ) : (
@@ -119,16 +119,16 @@ export default function TaskForm({ onAdd, projects: existingProjects, defaultTyp
                 <option value="__new__">＋ 新規プロジェクト...</option>
               </select>
             )}
-            <div className="flex items-center gap-2">
-              <label className="text-xs text-gray-400 whitespace-nowrap">期限</label>
-              <input
-                type="date"
-                value={dueDate}
-                onChange={e => setDueDate(e.target.value)}
-                className="border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-orange-400"
-              />
-            </div>
-          </>
+        {!isIdea && (
+          <div className="flex items-center gap-2">
+            <label className="text-xs text-gray-400 whitespace-nowrap">期限</label>
+            <input
+              type="date"
+              value={dueDate}
+              onChange={e => setDueDate(e.target.value)}
+              className="border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-orange-400"
+            />
+          </div>
         )}
       </div>
 
