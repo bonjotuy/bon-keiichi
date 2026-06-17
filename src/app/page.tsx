@@ -180,24 +180,41 @@ export default function Home() {
       {/* Task list */}
       {loading ? (
         <div className="text-center text-gray-400 py-16 text-sm">読み込み中...</div>
+      ) : filtered.length === 0 ? (
+        <div className="text-center text-gray-400 py-16 text-sm">
+          {filterStatus === 'ゴミ箱' ? 'ゴミ箱は空です 🗑' : 'タスクなし 🎉'}
+        </div>
       ) : (
-        <div className="space-y-2">
-          {filtered.length === 0 && (
-            <div className="text-center text-gray-400 py-16 text-sm">
-              {filterStatus === 'ゴミ箱' ? 'ゴミ箱は空です 🗑' : 'タスクなし 🎉'}
+        <div className="space-y-6">
+          {Object.entries(
+            filtered.reduce<Record<string, Task[]>>((acc, t) => {
+              const key = t.project || 'その他'
+              if (!acc[key]) acc[key] = []
+              acc[key].push(t)
+              return acc
+            }, {})
+          ).map(([project, items]) => (
+            <div key={project}>
+              <div className="flex items-center gap-2 mb-2">
+                <span className="text-xs font-bold text-gray-400 uppercase tracking-wider">{project}</span>
+                <div className="flex-1 h-px bg-gray-100" />
+                <span className="text-xs text-gray-300">{items.length}</span>
+              </div>
+              <div className="space-y-2">
+                {items.map(task => (
+                  <TaskCard
+                    key={task.id}
+                    task={task}
+                    onStatusChange={handleStatusChange}
+                    onDelete={handleDelete}
+                    onRestore={handleRestore}
+                    onDueDateChange={handleDueDateChange}
+                    onUpdate={handleUpdate}
+                    isTrash={filterStatus === 'ゴミ箱'}
+                  />
+                ))}
+              </div>
             </div>
-          )}
-          {filtered.map(task => (
-            <TaskCard
-              key={task.id}
-              task={task}
-              onStatusChange={handleStatusChange}
-              onDelete={handleDelete}
-              onRestore={handleRestore}
-              onDueDateChange={handleDueDateChange}
-              onUpdate={handleUpdate}
-              isTrash={filterStatus === 'ゴミ箱'}
-            />
           ))}
         </div>
       )}
